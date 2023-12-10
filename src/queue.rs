@@ -11,5 +11,12 @@ impl Default for GPUQueueInfo {
 }
 
 pub struct Queue {
-    pub(crate) inner: ash::vk::Queue
+    pub(crate) inner: ash::vk::Queue,
+    pub(crate) info: GPUQueueInfo
+}
+
+impl Queue {
+    pub fn dispatch(&self) {
+        
+    }
 }

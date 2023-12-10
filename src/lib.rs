@@ -2,7 +2,9 @@ mod vk;
 mod instance;
 mod device;
 mod queue;
+mod gallium;
 
+pub use gallium::*;
 pub use instance::*;
 pub use device::*;
 pub use queue::*;

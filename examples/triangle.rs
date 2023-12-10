@@ -19,4 +19,9 @@ fn main() {
     }
     let device = instance.create_device(&v_gpu[gpu_index], info).unwrap();
     let queue = device.get_queue(info);
+    let gallium = device.create_gallium(&queue).unwrap();
+
+    gallium.begin_draw(&device);
+    gallium.end_draw(&device);
+    device.dispatch_to_queue(&gallium, &queue);
 }
