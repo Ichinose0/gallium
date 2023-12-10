@@ -1,8 +1,8 @@
 use std::{ffi::{CString, CStr}, ptr::null_mut};
 
-use ash::vk::{PhysicalDevice, PhysicalDeviceProperties, QueueFamilyProperties, PhysicalDeviceFeatures, QueueFlags, CommandPoolCreateInfo, CommandPool, CommandBuffer, CommandBufferAllocateInfo, CommandBufferLevel, CommandBufferBeginInfo, SubmitInfo, Fence};
+use ash::vk::{PhysicalDevice, PhysicalDeviceProperties, QueueFamilyProperties, PhysicalDeviceFeatures, QueueFlags, CommandPoolCreateInfo, CommandPool, CommandBuffer, CommandBufferAllocateInfo, CommandBufferLevel, CommandBufferBeginInfo, SubmitInfo, Fence, ImageCreateInfo, ImageType, Extent3D, Format, ImageTiling, ImageLayout, ImageUsageFlags, SharingMode, SampleCountFlags, MemoryAllocateInfo};
 
-use crate::{Instance, GPUQueueInfo, Queue, GMResult, Gallium};
+use crate::{Instance, GPUQueueInfo, Queue, GMResult, Gallium, Image};
 
 /// Represents a physical device  
 /// 
@@ -119,8 +119,60 @@ impl Device {
         unsafe { self.inner.queue_submit(queue.inner, &[submit_info], Fence::null()).unwrap() };
     }
 
-    pub fn create_image(&self,width: u32,height: u32) {
+    pub fn create_image(&self,instance: &Instance,gpu: &GPU,width: u32,height: u32) -> Result<Image,GMResult> {
+        let create_info = ImageCreateInfo::builder()
+                            .image_type(ImageType::TYPE_2D)
+                            .extent(Extent3D::builder().width(width).height(height).depth(1).build())
+                            .mip_levels(1)
+                            .array_layers(1)
+                            .format(Format::R8G8B8A8_UNORM)
+                            .tiling(ImageTiling::LINEAR)
+                            .initial_layout(ImageLayout::UNDEFINED)
+                            .usage(ImageUsageFlags::COLOR_ATTACHMENT)
+                            .sharing_mode(SharingMode::EXCLUSIVE)
+                            .samples(SampleCountFlags::TYPE_1)
+                            .build();
+        let inner = match unsafe { self.inner.create_image(&create_info, None) } {
+            Ok(i) => i,
+            Err(_) => return Err(GMResult::UnknownError),
+        };
 
+        let mem_prop = unsafe { instance.instance.get_physical_device_memory_properties(gpu.device) };        
+        let img_mem_required = unsafe { self.inner.get_image_memory_requirements(inner) };
+
+        let mut memory_type_index = 0;
+        let mut found_suitable_memory_type = false;
+
+        for i in 0..mem_prop.memory_type_count {
+            if (img_mem_required.memory_type_bits & (1 << i)) != 0 {
+                memory_type_index = i;
+                found_suitable_memory_type = true;
+            }
+        }
+
+        if found_suitable_memory_type == false {
+            panic!("Failed to allocate device memory for Image");
+        }
+
+        let allocate_info = MemoryAllocateInfo::builder().allocation_size(img_mem_required.size).memory_type_index(memory_type_index).build();
+
+        let memory = match unsafe { self.inner.allocate_memory(&allocate_info, None) } {
+            Ok(m) => m,
+            Err(_) => return Err(GMResult::UnknownError),
+        };
+
+
+        match unsafe { self.inner.bind_image_memory(inner, memory, 0) } {
+            Ok(_) => {},
+            Err(_) => return Err(GMResult::UnknownError),
+        }
+
+        Ok(Image {
+            width,
+            height,
+            memory,
+            inner
+        })
     }
 }
 
