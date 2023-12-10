@@ -8,7 +8,7 @@ use ash::vk::{
     CommandPool, CommandPoolCreateInfo, Extent3D, Fence, Format, ImageCreateInfo, ImageLayout,
     ImageTiling, ImageType, ImageUsageFlags, MemoryAllocateInfo, PhysicalDevice,
     PhysicalDeviceFeatures, PhysicalDeviceProperties, QueueFamilyProperties, QueueFlags,
-    RenderPassCreateInfo, SampleCountFlags, SharingMode, SubmitInfo,
+    RenderPassCreateInfo, SampleCountFlags, SharingMode, SubmitInfo, AttachmentDescription, AttachmentLoadOp, AttachmentStoreOp, SubpassDescription, PipelineBindPoint, AttachmentReference,
 };
 
 use crate::{GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, SubPass};
@@ -254,7 +254,23 @@ impl Device {
     }
 
     pub fn create_render_pass(&self, subpasses: &[SubPass]) -> Result<RenderPass, GMResult> {
-        let create_info = RenderPassCreateInfo::builder().build();
+        let attachment_descs = vec![AttachmentDescription::builder()
+                                                                .format(Format::R8G8B8A8_UNORM)
+                                                                .samples(SampleCountFlags::TYPE_1)
+                                                                .load_op(AttachmentLoadOp::DONT_CARE)
+                                                                .store_op(AttachmentStoreOp::STORE)
+                                                                .stencil_load_op(AttachmentLoadOp::DONT_CARE)
+                                                                .stencil_store_op(AttachmentStoreOp::DONT_CARE)
+                                                                .initial_layout(ImageLayout::UNDEFINED)
+                                                                .final_layout(ImageLayout::GENERAL)
+                                                                .build()];
+        
+        let mut subpass = vec![];
+        for i in subpasses {
+            subpass.push(i.0);
+        }
+
+        let create_info = RenderPassCreateInfo::builder().attachments(&attachment_descs).subpasses(&subpass).dependencies(&[]).build();
         let inner = match unsafe { self.inner.create_render_pass(&create_info, None) } {
             Ok(r) => r,
             Err(_) => return Err(GMResult::UnknownError),

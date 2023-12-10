@@ -1,4 +1,4 @@
-use gallium::{GPUQueueInfo, Instance, InstanceDesc};
+use gallium::{GPUQueueInfo, Instance, InstanceDesc, SubPass};
 
 fn main() {
     let instance = match Instance::new(InstanceDesc {
@@ -23,6 +23,9 @@ fn main() {
     let gallium = device.create_gallium(&queue).unwrap();
 
     let image = device.create_image(&instance, gpu, 200, 200).unwrap();
+
+    let subpasses = vec![SubPass::new()];
+    let render_pass = device.create_render_pass(&subpasses).unwrap();
 
     gallium.begin_draw(&device);
     gallium.end_draw(&device);
