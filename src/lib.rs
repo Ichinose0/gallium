@@ -1,21 +1,22 @@
-mod vk;
-mod instance;
 mod device;
-mod queue;
 mod gallium;
 mod image;
+mod instance;
+mod queue;
+mod vk;
 
-pub use image::*;
-pub use gallium::*;
-pub use instance::*;
 pub use device::*;
+pub use gallium::*;
+pub use image::*;
+pub use instance::*;
 pub use queue::*;
 
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum GMResult {
     Success,
     IncompatibleDriver,
     InitializationError,
+    InvalidValue,
     OutOfMemory,
     UnknownError,
 }
