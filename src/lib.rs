@@ -3,7 +3,9 @@ mod instance;
 mod device;
 mod queue;
 mod gallium;
+mod image;
 
+pub use image::*;
 pub use gallium::*;
 pub use instance::*;
 pub use device::*;

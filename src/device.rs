@@ -4,6 +4,33 @@ use ash::vk::{PhysicalDevice, PhysicalDeviceProperties, QueueFamilyProperties, P
 
 use crate::{Instance, GPUQueueInfo, Queue, GMResult, Gallium};
 
+/// Represents a physical device  
+/// 
+/// Vec<GPU> can be obtained by [enumerate_gpu]!.
+/// This structure has the name of the physical device, supported flags, and other information.
+/// 
+/// # Example
+/// ```
+/// use gallium::{Instance, InstanceDesc, GPUQueueInfo};
+/// 
+/// fn main() {
+///     let instance = match Instance::new(InstanceDesc {
+///         app_name: "Triangle".to_owned(),
+///     }) {
+///         Ok(i) => i,
+///         Err(e) => panic!("{:?}",e),
+///     };
+///     let v_gpu = instance.enumerate_gpu().unwrap();
+///     let mut gpu_index = 0;
+///     let mut info = GPUQueueInfo::default();
+///     for (i,g) in v_gpu.iter().enumerate() {
+///        if g.is_support_graphics(&instance, &mut info) {
+///            println!("Supported! Name: {}",g.name());
+///            gpu_index = i;
+///        }
+///     }
+/// }
+/// ```
 pub struct GPU {
     pub(crate) device: PhysicalDevice,
     pub(crate) device_property: PhysicalDeviceProperties,
@@ -33,6 +60,33 @@ impl GPU {
     }
 }
 
+/// Represents a logical device  
+/// 
+/// Vec<GPU> can be obtained by [enumerate_gpu]!.
+/// This structure has the name of the physical device, supported flags, and other information.
+/// 
+/// # Example
+/// ```
+/// use gallium::{Instance, InstanceDesc, GPUQueueInfo};
+/// 
+/// fn main() {
+///     let instance = match Instance::new(InstanceDesc {
+///         app_name: "Triangle".to_owned(),
+///     }) {
+///         Ok(i) => i,
+///         Err(e) => panic!("{:?}",e),
+///     };
+///     let v_gpu = instance.enumerate_gpu().unwrap();
+///     let mut gpu_index = 0;
+///     let mut info = GPUQueueInfo::default();
+///     for (i,g) in v_gpu.iter().enumerate() {
+///        if g.is_support_graphics(&instance, &mut info) {
+///            println!("Supported! Name: {}",g.name());
+///            gpu_index = i;
+///        }
+///     }
+/// }
+/// ```
 pub struct Device {
     pub(crate) inner: ash::Device
 }
@@ -63,6 +117,10 @@ impl Device {
     pub fn dispatch_to_queue(&self,gallium: &Gallium,queue: &Queue) {
         let submit_info = SubmitInfo::builder().command_buffers(&gallium.command_buffers).build();
         unsafe { self.inner.queue_submit(queue.inner, &[submit_info], Fence::null()).unwrap() };
+    }
+
+    pub fn create_image(&self,width: u32,height: u32) {
+
     }
 }
 

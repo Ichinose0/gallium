@@ -10,6 +10,23 @@ pub struct InstanceDesc {
 
 }
 
+/// Represents a physical device  
+/// 
+/// This is the central structure for processing such as Device and GPU acquisition.
+/// 
+/// # Example
+/// ```
+/// use gallium::{Instance, InstanceDesc};
+/// 
+/// fn main() {
+///     let instance = match Instance::new(InstanceDesc {
+///         app_name: "Example".to_owned(),
+///     }) {
+///         Ok(i) => i,
+///         Err(e) => panic!("{:?}",e),
+///     };
+/// }
+/// ```
 pub struct Instance {
     entry: Entry,
     pub(crate) instance: ash::Instance,
