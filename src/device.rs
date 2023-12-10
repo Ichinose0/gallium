@@ -1,8 +1,8 @@
 use std::{ffi::{CString, CStr}, ptr::null_mut};
 
-use ash::vk::{PhysicalDevice, PhysicalDeviceProperties, QueueFamilyProperties, PhysicalDeviceFeatures, QueueFlags, CommandPoolCreateInfo, CommandPool, CommandBuffer, CommandBufferAllocateInfo, CommandBufferLevel, CommandBufferBeginInfo, SubmitInfo, Fence, ImageCreateInfo, ImageType, Extent3D, Format, ImageTiling, ImageLayout, ImageUsageFlags, SharingMode, SampleCountFlags, MemoryAllocateInfo};
+use ash::vk::{PhysicalDevice, PhysicalDeviceProperties, QueueFamilyProperties, PhysicalDeviceFeatures, QueueFlags, CommandPoolCreateInfo, CommandPool, CommandBuffer, CommandBufferAllocateInfo, CommandBufferLevel, CommandBufferBeginInfo, SubmitInfo, Fence, ImageCreateInfo, ImageType, Extent3D, Format, ImageTiling, ImageLayout, ImageUsageFlags, SharingMode, SampleCountFlags, MemoryAllocateInfo, RenderPassCreateInfo};
 
-use crate::{Instance, GPUQueueInfo, Queue, GMResult, Gallium, Image};
+use crate::{Instance, GPUQueueInfo, Queue, GMResult, Gallium, Image, SubPass, RenderPass};
 
 /// Represents a physical device  
 /// 
@@ -173,6 +173,15 @@ impl Device {
             memory,
             inner
         })
+    }
+
+    pub fn create_render_pass(&self,subpasses: &[SubPass]) -> Result<RenderPass,GMResult> {
+        let create_info = RenderPassCreateInfo::builder().build();
+        let inner = match unsafe { self.inner.create_render_pass(&create_info, None) } {
+            Ok(r) => r,
+            Err(_) => return Err(GMResult::UnknownError),
+        };
+        Ok(RenderPass { inner })
     }
 }
 
