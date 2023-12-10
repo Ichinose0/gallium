@@ -1,4 +1,4 @@
-use gallium::{Instance, InstanceDesc};
+use gallium::{Instance, InstanceDesc, GPUQueueInfo};
 
 fn main() {
     let instance = match Instance::new(InstanceDesc {
@@ -10,10 +10,13 @@ fn main() {
     let v_gpu = instance.enumerate_gpu().unwrap();
     let mut index = 0;
     let mut gpu_index = 0;
+    let mut  info = GPUQueueInfo::default();
     for (i,g) in v_gpu.iter().enumerate() {
-        if g.is_support_graphics(&instance, &mut index) {
+        if g.is_support_graphics(&instance, &mut info) {
+            println!("Supported! Name: {}",g.name());
             gpu_index = i;
         }
     }
-    let device = instance.create_device(&v_gpu[gpu_index], index).unwrap();
+    let device = instance.create_device(&v_gpu[gpu_index], info).unwrap();
+    let queue = device.get_queue(info);
 }

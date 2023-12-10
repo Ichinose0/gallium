@@ -2,7 +2,7 @@ use std::ffi::CString;
 
 use ash::{Entry, vk::{InstanceCreateInfo, ApplicationInfo, DeviceCreateInfo, DeviceQueueCreateInfo}};
 
-use crate::{GMResult, Device, GPU};
+use crate::{GMResult, Device, GPU, GPUQueueInfo};
 
 #[derive(Debug)]
 pub struct InstanceDesc {
@@ -44,20 +44,23 @@ impl Instance {
         let mut gpu = vec![];
         for i in devices {
             let device_property = unsafe { self.instance.get_physical_device_properties(i) };
-            let feature = unsafe { self.instance.get_physical_device_features(i) };
-            let queue_family_properties = unsafe { self.instance.get_physical_device_queue_family_properties(i) };
-            gpu.push(GPU { device: i, device_property, feature, queue_family_properties });
+
+            gpu.push(GPU { device: i, device_property });
         }
         
         Ok(gpu)
     }
 
-    pub fn create_device(&self,gpu: &GPU,index: u32) -> Result<Device,GMResult> {
-        let queue_create_info = DeviceQueueCreateInfo::builder().queue_family_index(index).queue_priorities(&[1.0]).build();
+    pub fn create_device(&self,gpu: &GPU,info: GPUQueueInfo) -> Result<Device,GMResult> {
+        let mut queue_create_info = DeviceQueueCreateInfo::builder().queue_family_index(info.index).queue_priorities(&[1.0]).build();
+        queue_create_info.queue_count = info.count;
         let create_info = DeviceCreateInfo::builder().queue_create_infos(&[queue_create_info]).build();
         let device = match unsafe { self.instance.create_device(gpu.device, &create_info,None) } {
             Ok(d) => d,
-            Err(_) => return Err(GMResult::UnknownError),
+            Err(e) => {
+                println!("{:?}",e);
+                return Err(GMResult::UnknownError)
+            },
         };
         Ok(Device { inner: device }) 
     }
