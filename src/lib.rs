@@ -2,9 +2,11 @@ mod device;
 mod gallium;
 mod image;
 mod instance;
+mod pipeline;
 mod queue;
 mod vk;
 
+pub use pipeline::*;
 pub use device::*;
 pub use gallium::*;
 pub use image::*;

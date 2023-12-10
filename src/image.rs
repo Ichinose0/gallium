@@ -1,13 +1,16 @@
-use ash::vk::{SubpassDescription, AttachmentReference, ImageLayout, PipelineBindPoint};
+use ash::vk::{SubpassDescription, AttachmentReference, ImageLayout, PipelineBindPoint, Rect2D};
+
+use crate::Pipeline;
 
 pub struct Image {
-    pub(crate) width: u32,
-    pub(crate) height: u32,
+    pub(crate) viewport: ash::vk::Viewport,
+    pub(crate) scissors: Vec<Rect2D>,
     pub(crate) memory: ash::vk::DeviceMemory,
     pub(crate) inner: ash::vk::Image,
 }
 
 impl Image {}
+
 
 pub struct SubPass(pub(crate) SubpassDescription);
 
@@ -31,3 +34,8 @@ pub struct RenderPass {
     pub(crate) inner: ash::vk::RenderPass,
 }
 
+impl RenderPass {
+    pub fn create_pipeline(&self) -> Pipeline {
+        todo!()
+    }
+}

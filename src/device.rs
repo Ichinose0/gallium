@@ -8,7 +8,7 @@ use ash::vk::{
     CommandPool, CommandPoolCreateInfo, Extent3D, Fence, Format, ImageCreateInfo, ImageLayout,
     ImageTiling, ImageType, ImageUsageFlags, MemoryAllocateInfo, PhysicalDevice,
     PhysicalDeviceFeatures, PhysicalDeviceProperties, QueueFamilyProperties, QueueFlags,
-    RenderPassCreateInfo, SampleCountFlags, SharingMode, SubmitInfo, AttachmentDescription, AttachmentLoadOp, AttachmentStoreOp, SubpassDescription, PipelineBindPoint, AttachmentReference,
+    RenderPassCreateInfo, SampleCountFlags, SharingMode, SubmitInfo, AttachmentDescription, AttachmentLoadOp, AttachmentStoreOp, SubpassDescription, PipelineBindPoint, AttachmentReference, Viewport, Rect2D, Offset2D, Extent2D,
 };
 
 use crate::{GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, SubPass};
@@ -245,9 +245,11 @@ impl Device {
             },
         }
 
+        let viewport = Viewport::builder().x(0.0).y(0.0).width(width as f32).height(height as f32).min_depth(0.0).max_depth(1.0).build();
+        let scissors = vec![Rect2D::builder().offset(Offset2D::builder().x(0.0 as i32).y(0.0 as i32).build()).extent(Extent2D::builder().width(width).height(height).build()).build()];
         Ok(Image {
-            width,
-            height,
+            viewport,
+            scissors,
             memory,
             inner,
         })
