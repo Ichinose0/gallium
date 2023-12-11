@@ -104,6 +104,11 @@ pub struct Device {
 }
 
 impl Device {
+    /// Get a specific queue of GPUs
+    ///
+    /// # Arguments
+    /// 
+    /// * `info` - GPU queue information to be acquired
     pub fn get_queue(&self, info: GPUQueueInfo) -> Queue {
         let inner = unsafe { self.inner.get_device_queue(info.index, 0) };
         Queue { inner, info }
@@ -157,6 +162,10 @@ impl Device {
         };
     }
 
+    /// Create an image
+    /// 
+    /// # Arguments
+    /// * `instance` - 
     pub fn create_image(
         &self,
         instance: &Instance,

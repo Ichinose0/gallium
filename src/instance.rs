@@ -7,15 +7,18 @@ use ash::{
 
 use crate::{Device, GMResult, GPUQueueInfo, GPU};
 
+/// Description for Instance Creation
+///  
+/// Instance::new() to create an instance
 #[derive(Debug)]
 pub struct InstanceDesc {
     pub app_name: String,
 }
 
 /// Represents a physical device  
-///
+///  
 /// This is the central structure for processing such as Device and GPU acquisition.
-///
+///  
 /// # Example
 /// ```
 /// use gallium::{Instance, InstanceDesc};
@@ -35,6 +38,19 @@ pub struct Instance {
 }
 
 impl Instance {
+    /// Create an instance
+    ///
+    /// * `desc` - Description for Instance Creation.
+    ///
+    /// # Example
+    /// ```
+    /// use gallium::{Instance, InstanceDesc};
+    ///
+    /// fn main() {
+    ///     let desc = InstanceDesc { app_name: "example".to_owned() };
+    ///     let instance = Instance::new(desc).unwrap();
+    /// }
+    /// ```
     pub fn new(desc: InstanceDesc) -> Result<Self, GMResult> {
         let entry = ash::Entry::linked();
         let app_info = ApplicationInfo::builder()
@@ -99,6 +115,28 @@ impl Instance {
         Ok(gpu)
     }
 
+    /// Create a device (logical device).
+    ///
+    /// # Arguments
+    /// 
+    /// * `gpu` - A suitable GPU for creating the device; this is typically a GPU with graphics support.
+    /// * `info` - GPU Queue Information
+    /// 
+    /// # Example
+    /// ```
+    /// let v_gpu = instance.enumerate_gpu().unwrap();
+    /// let mut index = 0;
+    /// let mut gpu_index = 0;
+    /// let mut info = GPUQueueInfo::default();
+    /// for (i, g) in v_gpu.iter().enumerate() {
+    ///     if g.is_support_graphics(&instance, &mut info) {
+    ///         println!("Supported! Name: {}", g.name());
+    ///         gpu_index = i;
+    ///     }
+    /// }
+    /// let gpu = &v_gpu[gpu_index];
+    /// let device = instance.create_device(gpu, info).unwrap();
+    /// ```
     pub fn create_device(&self, gpu: &GPU, info: GPUQueueInfo) -> Result<Device, GMResult> {
         let mut queue_create_info = DeviceQueueCreateInfo::builder()
             .queue_family_index(info.index)

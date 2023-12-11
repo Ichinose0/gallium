@@ -4,6 +4,7 @@ mod image;
 mod instance;
 mod pipeline;
 mod queue;
+#[doc(hidden)]
 mod vk;
 
 pub use pipeline::*;
