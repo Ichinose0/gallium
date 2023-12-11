@@ -7,11 +7,11 @@ mod queue;
 #[doc(hidden)]
 mod vk;
 
-pub use pipeline::*;
 pub use device::*;
 pub use gallium::*;
 pub use image::*;
 pub use instance::*;
+pub use pipeline::*;
 pub use queue::*;
 
 #[derive(Clone, Copy, Debug)]

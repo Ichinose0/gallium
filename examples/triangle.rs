@@ -26,6 +26,7 @@ fn main() {
 
     let subpasses = vec![SubPass::new()];
     let render_pass = device.create_render_pass(&subpasses).unwrap();
+    let pipeline = render_pass.create_pipeline(&image, &device).unwrap();
 
     gallium.begin_draw(&device);
     gallium.end_draw(&device);

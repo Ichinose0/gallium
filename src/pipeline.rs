@@ -1,3 +1,3 @@
 pub struct Pipeline {
-    inner: ash::vk::Pipeline
+    pub(crate) inner: ash::vk::Pipeline,
 }

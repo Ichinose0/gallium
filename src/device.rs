@@ -4,11 +4,13 @@ use std::{
 };
 
 use ash::vk::{
-    CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel,
-    CommandPool, CommandPoolCreateInfo, Extent3D, Fence, Format, ImageCreateInfo, ImageLayout,
-    ImageTiling, ImageType, ImageUsageFlags, MemoryAllocateInfo, PhysicalDevice,
-    PhysicalDeviceFeatures, PhysicalDeviceProperties, QueueFamilyProperties, QueueFlags,
-    RenderPassCreateInfo, SampleCountFlags, SharingMode, SubmitInfo, AttachmentDescription, AttachmentLoadOp, AttachmentStoreOp, SubpassDescription, PipelineBindPoint, AttachmentReference, Viewport, Rect2D, Offset2D, Extent2D,
+    AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp, CommandBuffer,
+    CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel, CommandPool,
+    CommandPoolCreateInfo, Extent2D, Extent3D, Fence, Format, ImageCreateInfo, ImageLayout,
+    ImageTiling, ImageType, ImageUsageFlags, MemoryAllocateInfo, Offset2D, PhysicalDevice,
+    PhysicalDeviceFeatures, PhysicalDeviceProperties, PipelineBindPoint, QueueFamilyProperties,
+    QueueFlags, Rect2D, RenderPassCreateInfo, SampleCountFlags, SharingMode, SubmitInfo,
+    SubpassDescription, Viewport,
 };
 
 use crate::{GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, SubPass};
@@ -107,7 +109,7 @@ impl Device {
     /// Get a specific queue of GPUs
     ///
     /// # Arguments
-    /// 
+    ///
     /// * `info` - GPU queue information to be acquired
     pub fn get_queue(&self, info: GPUQueueInfo) -> Queue {
         let inner = unsafe { self.inner.get_device_queue(info.index, 0) };
@@ -127,7 +129,7 @@ impl Device {
                     crate::vk::VK_ERROR_OUT_OF_DEVICE_MEMORY => return Err(GMResult::OutOfMemory),
                     _ => return Err(GMResult::UnknownError),
                 }
-            },
+            }
         };
         let allocate_info = CommandBufferAllocateInfo::builder()
             .command_pool(command_pool)
@@ -143,7 +145,7 @@ impl Device {
                     crate::vk::VK_ERROR_OUT_OF_DEVICE_MEMORY => return Err(GMResult::OutOfMemory),
                     _ => return Err(GMResult::UnknownError),
                 }
-            },
+            }
         };
         Ok(Gallium {
             command_pool,
@@ -163,9 +165,9 @@ impl Device {
     }
 
     /// Create an image
-    /// 
+    ///
     /// # Arguments
-    /// * `instance` - 
+    /// * `instance` -
     pub fn create_image(
         &self,
         instance: &Instance,
@@ -200,7 +202,7 @@ impl Device {
                     crate::vk::VK_ERROR_OUT_OF_DEVICE_MEMORY => return Err(GMResult::OutOfMemory),
                     _ => return Err(GMResult::UnknownError),
                 }
-            },
+            }
         };
 
         let mem_prop = unsafe {
@@ -236,10 +238,12 @@ impl Device {
                 match code {
                     crate::vk::VK_ERROR_OUT_OF_HOST_MEMORY => return Err(GMResult::OutOfMemory),
                     crate::vk::VK_ERROR_OUT_OF_DEVICE_MEMORY => return Err(GMResult::OutOfMemory),
-                    crate::vk::VK_ERROR_INVALID_EXTERNAL_HANDLE => return Err(GMResult::InvalidValue),
+                    crate::vk::VK_ERROR_INVALID_EXTERNAL_HANDLE => {
+                        return Err(GMResult::InvalidValue)
+                    }
                     _ => return Err(GMResult::UnknownError),
                 }
-            },
+            }
         };
 
         match unsafe { self.inner.bind_image_memory(inner, memory, 0) } {
@@ -251,11 +255,21 @@ impl Device {
                     crate::vk::VK_ERROR_OUT_OF_DEVICE_MEMORY => return Err(GMResult::OutOfMemory),
                     _ => return Err(GMResult::UnknownError),
                 }
-            },
+            }
         }
 
-        let viewport = Viewport::builder().x(0.0).y(0.0).width(width as f32).height(height as f32).min_depth(0.0).max_depth(1.0).build();
-        let scissors = vec![Rect2D::builder().offset(Offset2D::builder().x(0.0 as i32).y(0.0 as i32).build()).extent(Extent2D::builder().width(width).height(height).build()).build()];
+        let viewport = Viewport::builder()
+            .x(0.0)
+            .y(0.0)
+            .width(width as f32)
+            .height(height as f32)
+            .min_depth(0.0)
+            .max_depth(1.0)
+            .build();
+        let scissors = vec![Rect2D::builder()
+            .offset(Offset2D::builder().x(0.0 as i32).y(0.0 as i32).build())
+            .extent(Extent2D::builder().width(width).height(height).build())
+            .build()];
         Ok(Image {
             viewport,
             scissors,
@@ -266,22 +280,26 @@ impl Device {
 
     pub fn create_render_pass(&self, subpasses: &[SubPass]) -> Result<RenderPass, GMResult> {
         let attachment_descs = vec![AttachmentDescription::builder()
-                                                                .format(Format::R8G8B8A8_UNORM)
-                                                                .samples(SampleCountFlags::TYPE_1)
-                                                                .load_op(AttachmentLoadOp::DONT_CARE)
-                                                                .store_op(AttachmentStoreOp::STORE)
-                                                                .stencil_load_op(AttachmentLoadOp::DONT_CARE)
-                                                                .stencil_store_op(AttachmentStoreOp::DONT_CARE)
-                                                                .initial_layout(ImageLayout::UNDEFINED)
-                                                                .final_layout(ImageLayout::GENERAL)
-                                                                .build()];
-        
+            .format(Format::R8G8B8A8_UNORM)
+            .samples(SampleCountFlags::TYPE_1)
+            .load_op(AttachmentLoadOp::DONT_CARE)
+            .store_op(AttachmentStoreOp::STORE)
+            .stencil_load_op(AttachmentLoadOp::DONT_CARE)
+            .stencil_store_op(AttachmentStoreOp::DONT_CARE)
+            .initial_layout(ImageLayout::UNDEFINED)
+            .final_layout(ImageLayout::GENERAL)
+            .build()];
+
         let mut subpass = vec![];
         for i in subpasses {
             subpass.push(i.0);
         }
 
-        let create_info = RenderPassCreateInfo::builder().attachments(&attachment_descs).subpasses(&subpass).dependencies(&[]).build();
+        let create_info = RenderPassCreateInfo::builder()
+            .attachments(&attachment_descs)
+            .subpasses(&subpass)
+            .dependencies(&[])
+            .build();
         let inner = match unsafe { self.inner.create_render_pass(&create_info, None) } {
             Ok(r) => r,
             Err(_) => return Err(GMResult::UnknownError),
