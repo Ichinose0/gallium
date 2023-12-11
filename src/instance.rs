@@ -79,14 +79,14 @@ impl Instance {
         };
         Ok(Self { entry, instance })
     }
- 
+
     /// Get a list of available physical devices (GPUs).  
     /// GPUs are required to create devices  
-    /// 
+    ///
     /// # Example
     /// ```
     /// use gallium::Instance;
-    /// 
+    ///
     /// fn main() {
     ///     let instance = match Instance::new(InstanceDesc {
     ///         app_name: "Example".to_owned(),
@@ -118,10 +118,10 @@ impl Instance {
     /// Create a device (logical device).
     ///
     /// # Arguments
-    /// 
+    ///
     /// * `gpu` - A suitable GPU for creating the device; this is typically a GPU with graphics support.
     /// * `info` - GPU Queue Information
-    /// 
+    ///
     /// # Example
     /// ```
     /// let v_gpu = instance.enumerate_gpu().unwrap();
