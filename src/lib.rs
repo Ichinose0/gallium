@@ -4,9 +4,11 @@ mod image;
 mod instance;
 mod pipeline;
 mod queue;
+mod shader;
 #[doc(hidden)]
 mod vk;
 
+pub use shader::*;
 pub use device::*;
 pub use gallium::*;
 pub use image::*;

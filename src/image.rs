@@ -5,10 +5,10 @@ use ash::vk::{
     PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
     PipelineRasterizationStateCreateInfo, PipelineVertexInputStateCreateInfo,
     PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags,
-    SubpassDescription,
+    SubpassDescription, PipelineShaderStageCreateInfo,
 };
 
-use crate::Pipeline;
+use crate::{Pipeline, Shader};
 use crate::{Device, GMResult};
 
 pub struct Image {
@@ -51,7 +51,12 @@ impl RenderPass {
         &self,
         image: &Image,
         device: &Device,
+        shaders: &[Shader]
     ) -> Result<Vec<Pipeline>, GMResult> {
+        let mut shader_stages = vec![];
+        for i in shaders {
+            shader_stages.push(PipelineShaderStageCreateInfo::builder().)
+        }
         let viewport_state_info = PipelineViewportStateCreateInfo::builder()
             .viewports(&[image.viewport])
             .scissors(&image.scissors)

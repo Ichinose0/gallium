@@ -1,19 +1,20 @@
 use std::{
     ffi::{CStr, CString},
-    ptr::null_mut,
+    ptr::null_mut, io::Cursor,
 };
+use std::io::Read;
 
-use ash::vk::{
+use ash::{vk::{
     AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp, CommandBuffer,
     CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel, CommandPool,
     CommandPoolCreateInfo, Extent2D, Extent3D, Fence, Format, ImageCreateInfo, ImageLayout,
     ImageTiling, ImageType, ImageUsageFlags, MemoryAllocateInfo, Offset2D, PhysicalDevice,
     PhysicalDeviceFeatures, PhysicalDeviceProperties, PipelineBindPoint, QueueFamilyProperties,
     QueueFlags, Rect2D, RenderPassCreateInfo, SampleCountFlags, SharingMode, SubmitInfo,
-    SubpassDescription, Viewport,
-};
+    SubpassDescription, Viewport, ShaderModuleCreateInfo,
+}, util::read_spv};
 
-use crate::{GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, SubPass};
+use crate::{GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, SubPass, Spirv, Shader, ShaderKind};
 
 /// Represents a physical device  
 ///
@@ -305,5 +306,22 @@ impl Device {
             Err(_) => return Err(GMResult::UnknownError),
         };
         Ok(RenderPass { inner })
+    }
+
+    pub fn create_shader_module(&self,file: &str,kind: ShaderKind) -> Result<Shader,GMResult> {
+        let mut file = std::fs::File::open(file).expect("file open failed");
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf).expect("file read failed");
+        let mut spirv_file = Cursor::new(&buf);
+        let spirv = read_spv(&mut spirv_file).unwrap();
+        let shader_create_info = ShaderModuleCreateInfo::builder().code(&spirv).build();
+        let shader = match unsafe { self.inner.create_shader_module(&shader_create_info, None) } {
+            Ok(s) => s,
+            Err(_) => panic!("Err"),
+        };
+        Ok(Shader {
+            inner: shader,
+            kind,
+        })
     }
 }
