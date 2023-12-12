@@ -6,6 +6,9 @@ mod pipeline;
 mod mem;
 mod queue;
 mod shader;
+
+#[cfg(feature="surface")]
+mod surface;
 #[doc(hidden)]
 mod vk;
 
@@ -17,6 +20,9 @@ pub use instance::*;
 pub use pipeline::*;
 pub use queue::*;
 pub use shader::*;
+
+#[cfg(feature="surface")]
+pub use surface::*;
 
 /// Result value returned when gallium instruction is executed
 ///
