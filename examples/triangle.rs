@@ -1,3 +1,5 @@
+use std::{fs::File, io::BufWriter};
+
 use gallium::{GPUQueueInfo, Instance, InstanceDesc, ShaderKind, Spirv, SubPass};
 
 fn main() {
@@ -22,14 +24,14 @@ fn main() {
     let queue = device.get_queue(info);
     let gallium = device.create_gallium(&queue).unwrap();
 
-    let image = device.create_image(&instance, gpu, 200, 200).unwrap();
+    let image = device.create_image(&instance, gpu, 640, 480).unwrap();
     let image_view = image.create_image_view(&device).unwrap();
     
 
     let subpasses = vec![SubPass::new()];
     let render_pass = device.create_render_pass(&subpasses).unwrap();
 
-    let frame_buffer = image_view.create_frame_buffer(&device, &render_pass, 200, 200).unwrap();
+    let frame_buffer = image_view.create_frame_buffer(&device, &render_pass, 640, 480).unwrap();
 
     let fragment_shader = device
         .create_shader_module(
@@ -48,10 +50,26 @@ fn main() {
         .unwrap();
 
     gallium.begin_draw(&device);
-    gallium.begin_render_pass(&device, &frame_buffer, &render_pass, 200,200);
+    gallium.begin_render_pass(&device, &frame_buffer, &render_pass, 640,480);
     gallium.end_render_pass(&device);
     gallium.bind_pipeline(&device, &pipeline[0]);
     gallium.draw(&device,3,1,0,0);
     gallium.end_draw(&device);
     device.dispatch_to_queue(&gallium, &queue);
+
+    let path = "example.png";
+    let file = File::create(path).unwrap();
+    let w = &mut BufWriter::new(file);
+
+    let mut encoder = png::Encoder::new(w, 640, 480); // Width is 2 pixels and height is 1.
+    encoder.set_color(png::ColorType::Rgba);
+    encoder.set_depth(png::BitDepth::Eight);
+
+    let mut writer = encoder.write_header().unwrap();
+
+    let data = device.get_data(&image);
+    let length = image.img_mem_required.size;// データのサイズに応じて適切なサイズを指定
+    let slice: &[u8] = unsafe { std::slice::from_raw_parts(data as *const u8, 1228800) };
+ // An array containing a RGBA sequence. First pixel is red and second pixel is black.
+    writer.write_image_data(&slice).unwrap();
 }

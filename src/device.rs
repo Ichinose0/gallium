@@ -1,10 +1,12 @@
 use std::io::Read;
+use std::os::raw::c_void;
 use std::{
     ffi::{CStr, CString},
     io::Cursor,
     ptr::null_mut,
 };
 
+use ash::vk::MemoryMapFlags;
 use ash::{
     util::read_spv,
     vk::{
@@ -282,6 +284,7 @@ impl Device {
             viewport,
             scissors,
             memory,
+            img_mem_required,
             inner,
         })
     }
@@ -325,5 +328,11 @@ impl Device {
             inner: shader,
             kind,
         })
+    }
+
+    pub fn get_data(&self,image: &Image) -> *mut c_void {
+        unsafe {
+            self.inner.map_memory(image.memory, 0, image.img_mem_required.size, MemoryMapFlags::empty()).unwrap()
+        }
     }
 }

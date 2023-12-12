@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 ash = { version = "0.37", features = ["linked"] }
+
+[dev-dependencies]
+png = "0.17.10"

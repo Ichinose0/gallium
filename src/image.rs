@@ -8,7 +8,7 @@ use ash::vk::{
     PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
     PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo,
     PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
-    PrimitiveTopology, Rect2D, SampleCountFlags, ShaderStageFlags, SubpassDescription, ImageSubresourceRange, ImageAspectFlags, FramebufferCreateInfo,
+    PrimitiveTopology, Rect2D, SampleCountFlags, ShaderStageFlags, SubpassDescription, ImageSubresourceRange, ImageAspectFlags, FramebufferCreateInfo, MemoryRequirements,
 };
 
 use crate::{Device, GMResult};
@@ -18,6 +18,7 @@ pub struct Image {
     pub(crate) viewport: ash::vk::Viewport,
     pub(crate) scissors: Vec<Rect2D>,
     pub(crate) memory: ash::vk::DeviceMemory,
+    pub img_mem_required: MemoryRequirements,
     pub(crate) inner: ash::vk::Image,
 }
 
