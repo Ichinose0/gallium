@@ -308,13 +308,8 @@ impl Device {
         Ok(RenderPass { inner })
     }
 
-    pub fn create_shader_module(&self,file: &str,kind: ShaderKind) -> Result<Shader,GMResult> {
-        let mut file = std::fs::File::open(file).expect("file open failed");
-        let mut buf = Vec::new();
-        file.read_to_end(&mut buf).expect("file read failed");
-        let mut spirv_file = Cursor::new(&buf);
-        let spirv = read_spv(&mut spirv_file).unwrap();
-        let shader_create_info = ShaderModuleCreateInfo::builder().code(&spirv).build();
+    pub fn create_shader_module(&self,spirv: Spirv,kind: ShaderKind) -> Result<Shader,GMResult> {
+        let shader_create_info = ShaderModuleCreateInfo::builder().code(&spirv.data).build();
         let shader = match unsafe { self.inner.create_shader_module(&shader_create_info, None) } {
             Ok(s) => s,
             Err(_) => panic!("Err"),
