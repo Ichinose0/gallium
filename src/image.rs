@@ -1,4 +1,4 @@
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 
 use ash::vk::{
     AttachmentReference, ColorComponentFlags, ComponentMapping, ComponentSwizzle, CullModeFlags,
@@ -8,7 +8,7 @@ use ash::vk::{
     PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
     PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo,
     PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
-    PrimitiveTopology, Rect2D, SampleCountFlags, ShaderStageFlags, SubpassDescription, ImageSubresourceRange, ImageAspectFlags, FramebufferCreateInfo, MemoryRequirements,
+    PrimitiveTopology, Rect2D, SampleCountFlags, ShaderStageFlags, SubpassDescription, ImageSubresourceRange, ImageAspectFlags, FramebufferCreateInfo, MemoryRequirements, MemoryMapFlags,
 };
 
 use crate::{Device, GMResult};
@@ -18,7 +18,7 @@ pub struct Image {
     pub(crate) viewport: ash::vk::Viewport,
     pub(crate) scissors: Vec<Rect2D>,
     pub(crate) memory: ash::vk::DeviceMemory,
-    pub img_mem_required: MemoryRequirements,
+    pub(crate) img_mem_required: MemoryRequirements,
     pub(crate) inner: ash::vk::Image,
 }
 
@@ -43,6 +43,12 @@ impl Image {
             Err(_) => return Err(GMResult::UnknownError),
         };
         Ok(ImageView { inner })
+    }
+
+    pub fn map_memory(&self,device: &Device) -> *mut c_void {
+        unsafe {
+            device.inner.map_memory(self.memory, 0, self.img_mem_required.size, MemoryMapFlags::empty()).unwrap()
+        }
     }
 }
 

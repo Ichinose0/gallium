@@ -3,11 +3,13 @@ mod gallium;
 mod image;
 mod instance;
 mod pipeline;
+mod mem;
 mod queue;
 mod shader;
 #[doc(hidden)]
 mod vk;
 
+pub use mem::*;
 pub use device::*;
 pub use gallium::*;
 pub use image::*;

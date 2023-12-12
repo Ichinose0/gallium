@@ -61,15 +61,13 @@ fn main() {
     let file = File::create(path).unwrap();
     let w = &mut BufWriter::new(file);
 
-    let mut encoder = png::Encoder::new(w, 640, 480); // Width is 2 pixels and height is 1.
+    let mut encoder = png::Encoder::new(w, 640, 480);
     encoder.set_color(png::ColorType::Rgba);
     encoder.set_depth(png::BitDepth::Eight);
 
     let mut writer = encoder.write_header().unwrap();
 
-    let data = device.get_data(&image);
-    let length = image.img_mem_required.size;// データのサイズに応じて適切なサイズを指定
+    let data = image.map_memory(&device);
     let slice: &[u8] = unsafe { std::slice::from_raw_parts(data as *const u8, 1228800) };
- // An array containing a RGBA sequence. First pixel is red and second pixel is black.
     writer.write_image_data(&slice).unwrap();
 }

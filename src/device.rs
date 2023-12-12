@@ -329,10 +329,4 @@ impl Device {
             kind,
         })
     }
-
-    pub fn get_data(&self,image: &Image) -> *mut c_void {
-        unsafe {
-            self.inner.map_memory(image.memory, 0, image.img_mem_required.size, MemoryMapFlags::empty()).unwrap()
-        }
-    }
 }
