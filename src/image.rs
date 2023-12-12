@@ -8,7 +8,7 @@ use ash::vk::{
     PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
     PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo,
     PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
-    PrimitiveTopology, Rect2D, SampleCountFlags, ShaderStageFlags, SubpassDescription, ImageSubresourceRange, ImageAspectFlags,
+    PrimitiveTopology, Rect2D, SampleCountFlags, ShaderStageFlags, SubpassDescription, ImageSubresourceRange, ImageAspectFlags, FramebufferCreateInfo,
 };
 
 use crate::{Device, GMResult};
@@ -47,6 +47,23 @@ impl Image {
 
 pub struct ImageView {
     inner: ash::vk::ImageView,
+}
+
+impl ImageView {
+    pub fn create_frame_buffer(&self,device: &Device,render_pass: &RenderPass,width: u32,height: u32) -> Result<FrameBuffer,GMResult> {
+        let create_info = FramebufferCreateInfo::builder().width(width).height(height).layers(1).render_pass(render_pass.inner).attachments(&[self.inner]).build();
+        let inner = match unsafe { device.inner.create_framebuffer(&create_info, None) } {
+            Ok(f) => f,
+            Err(_) => return Err(GMResult::UnknownError),
+        };
+        Ok(FrameBuffer {
+            inner
+        })
+    }
+}
+
+pub struct FrameBuffer {
+    pub(crate) inner: ash::vk::Framebuffer
 }
 
 pub struct SubPass(pub(crate) SubpassDescription);
