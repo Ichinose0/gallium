@@ -1,4 +1,4 @@
-use gallium::{GPUQueueInfo, Instance, InstanceDesc, SubPass};
+use gallium::{GPUQueueInfo, Instance, InstanceDesc, SubPass, ShaderKind, Spirv};
 
 fn main() {
     let instance = match Instance::new(InstanceDesc {
@@ -26,7 +26,9 @@ fn main() {
 
     let subpasses = vec![SubPass::new()];
     let render_pass = device.create_render_pass(&subpasses).unwrap();
-    let pipeline = render_pass.create_pipeline(&image, &device).unwrap();
+    let fragment_shader = device.create_shader_module(Spirv::new("examples/shader/shader.frag.spv"),ShaderKind::Fragment).unwrap();
+    let vertex_shader = device.create_shader_module(Spirv::new("examples/shader/shader.vert.spv"),ShaderKind::Vertex).unwrap();
+    let pipeline = render_pass.create_pipeline(&image, &device,&[fragment_shader,vertex_shader]).unwrap();
 
     gallium.begin_draw(&device);
     gallium.end_draw(&device);

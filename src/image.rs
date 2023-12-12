@@ -1,3 +1,5 @@
+use std::ffi::{CString, CStr};
+
 use ash::vk::{
     AttachmentReference, ColorComponentFlags, CullModeFlags, FrontFace, GraphicsPipelineCreateInfo,
     ImageLayout, PipelineBindPoint, PipelineCache, PipelineColorBlendAttachmentState,
@@ -5,10 +7,10 @@ use ash::vk::{
     PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
     PipelineRasterizationStateCreateInfo, PipelineVertexInputStateCreateInfo,
     PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags,
-    SubpassDescription,
+    SubpassDescription, PipelineShaderStageCreateInfo, ShaderStageFlags,
 };
 
-use crate::Pipeline;
+use crate::{Pipeline, Shader};
 use crate::{Device, GMResult};
 
 pub struct Image {
@@ -51,7 +53,20 @@ impl RenderPass {
         &self,
         image: &Image,
         device: &Device,
+        shaders: &[Shader]
     ) -> Result<Vec<Pipeline>, GMResult> {
+        if shaders.is_empty() {
+            return Err(GMResult::InvalidValue);
+        }
+        let mut shader_stages = vec![];
+        let entry = CString::new("main").unwrap();
+        for i in shaders {
+            let flag = match i.kind {
+                crate::ShaderKind::Vertex => ShaderStageFlags::VERTEX,
+                crate::ShaderKind::Fragment => ShaderStageFlags::FRAGMENT,
+            };
+            shader_stages.push(PipelineShaderStageCreateInfo::builder().module(i.inner).name(entry.as_c_str()).stage(flag).build());
+        }
         let viewport_state_info = PipelineViewportStateCreateInfo::builder()
             .viewports(&[image.viewport])
             .scissors(&image.scissors)
@@ -125,6 +140,7 @@ impl RenderPass {
             .stages(&[])
             .render_pass(self.inner)
             .subpass(0)
+            .stages(&shader_stages)
             .build();
 
         let pipeline = match unsafe {
