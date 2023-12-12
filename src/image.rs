@@ -1,17 +1,18 @@
-use std::ffi::{CString, CStr};
+use std::ffi::{CStr, CString};
 
 use ash::vk::{
-    AttachmentReference, ColorComponentFlags, CullModeFlags, FrontFace, GraphicsPipelineCreateInfo,
-    ImageLayout, PipelineBindPoint, PipelineCache, PipelineColorBlendAttachmentState,
+    AttachmentReference, ColorComponentFlags, ComponentMapping, ComponentSwizzle, CullModeFlags,
+    Format, FrontFace, GraphicsPipelineCreateInfo, ImageLayout, ImageViewCreateInfo, ImageViewType,
+    PipelineBindPoint, PipelineCache, PipelineColorBlendAttachmentState,
     PipelineColorBlendStateCreateInfo, PipelineInputAssemblyStateCreateInfo,
     PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
-    PipelineRasterizationStateCreateInfo, PipelineVertexInputStateCreateInfo,
-    PipelineViewportStateCreateInfo, PolygonMode, PrimitiveTopology, Rect2D, SampleCountFlags,
-    SubpassDescription, PipelineShaderStageCreateInfo, ShaderStageFlags,
+    PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo,
+    PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
+    PrimitiveTopology, Rect2D, SampleCountFlags, ShaderStageFlags, SubpassDescription, ImageSubresourceRange, ImageAspectFlags,
 };
 
-use crate::{Pipeline, Shader};
 use crate::{Device, GMResult};
+use crate::{Pipeline, Shader};
 
 pub struct Image {
     pub(crate) viewport: ash::vk::Viewport,
@@ -20,7 +21,33 @@ pub struct Image {
     pub(crate) inner: ash::vk::Image,
 }
 
-impl Image {}
+impl Image {
+    pub fn create_image_view(&self, device: &Device) -> Result<ImageView, GMResult> {
+        let create_info = ImageViewCreateInfo::builder()
+            .image(self.inner)
+            .view_type(ImageViewType::TYPE_2D)
+            .format(Format::R8G8B8A8_UNORM)
+            .components(
+                ComponentMapping::builder()
+                    .a(ComponentSwizzle::IDENTITY)
+                    .r(ComponentSwizzle::IDENTITY)
+                    .g(ComponentSwizzle::IDENTITY)
+                    .b(ComponentSwizzle::IDENTITY)
+                    .build(),
+            )
+            .subresource_range(ImageSubresourceRange::builder().aspect_mask(ImageAspectFlags::COLOR).base_mip_level(0).level_count(1).base_array_layer(0).layer_count(1).build())
+            .build();
+        let inner = match unsafe { device.inner.create_image_view(&create_info, None) } {
+            Ok(i) => i,
+            Err(_) => return Err(GMResult::UnknownError),
+        };
+        Ok(ImageView { inner })
+    }
+}
+
+pub struct ImageView {
+    inner: ash::vk::ImageView,
+}
 
 pub struct SubPass(pub(crate) SubpassDescription);
 
@@ -53,7 +80,7 @@ impl RenderPass {
         &self,
         image: &Image,
         device: &Device,
-        shaders: &[Shader]
+        shaders: &[Shader],
     ) -> Result<Vec<Pipeline>, GMResult> {
         if shaders.is_empty() {
             return Err(GMResult::InvalidValue);
@@ -65,7 +92,13 @@ impl RenderPass {
                 crate::ShaderKind::Vertex => ShaderStageFlags::VERTEX,
                 crate::ShaderKind::Fragment => ShaderStageFlags::FRAGMENT,
             };
-            shader_stages.push(PipelineShaderStageCreateInfo::builder().module(i.inner).name(entry.as_c_str()).stage(flag).build());
+            shader_stages.push(
+                PipelineShaderStageCreateInfo::builder()
+                    .module(i.inner)
+                    .name(entry.as_c_str())
+                    .stage(flag)
+                    .build(),
+            );
         }
         let viewport_state_info = PipelineViewportStateCreateInfo::builder()
             .viewports(&[image.viewport])

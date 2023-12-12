@@ -1,14 +1,14 @@
-use std::io::{Read, Cursor};
-use ash::{vk::ShaderModule, util::read_spv};
+use ash::{util::read_spv, vk::ShaderModule};
+use std::io::{Cursor, Read};
 
 #[derive(Debug)]
 pub enum ShaderKind {
     Vertex,
-    Fragment
+    Fragment,
 }
 
 pub struct Spirv {
-    pub(crate) data: Vec<u32>
+    pub(crate) data: Vec<u32>,
 }
 
 impl Spirv {
@@ -19,9 +19,7 @@ impl Spirv {
         let mut spirv_file = Cursor::new(&buf);
         let spirv = read_spv(&mut spirv_file).unwrap();
 
-        Self {
-            data: spirv
-        }
+        Self { data: spirv }
     }
 }
 

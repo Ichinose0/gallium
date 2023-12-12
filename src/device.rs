@@ -1,20 +1,27 @@
+use std::io::Read;
 use std::{
     ffi::{CStr, CString},
-    ptr::null_mut, io::Cursor,
+    io::Cursor,
+    ptr::null_mut,
 };
-use std::io::Read;
 
-use ash::{vk::{
-    AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp, CommandBuffer,
-    CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel, CommandPool,
-    CommandPoolCreateInfo, Extent2D, Extent3D, Fence, Format, ImageCreateInfo, ImageLayout,
-    ImageTiling, ImageType, ImageUsageFlags, MemoryAllocateInfo, Offset2D, PhysicalDevice,
-    PhysicalDeviceFeatures, PhysicalDeviceProperties, PipelineBindPoint, QueueFamilyProperties,
-    QueueFlags, Rect2D, RenderPassCreateInfo, SampleCountFlags, SharingMode, SubmitInfo,
-    SubpassDescription, Viewport, ShaderModuleCreateInfo,
-}, util::read_spv};
+use ash::{
+    util::read_spv,
+    vk::{
+        AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp,
+        CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel,
+        CommandPool, CommandPoolCreateInfo, Extent2D, Extent3D, Fence, Format, ImageCreateInfo,
+        ImageLayout, ImageTiling, ImageType, ImageUsageFlags, MemoryAllocateInfo, Offset2D,
+        PhysicalDevice, PhysicalDeviceFeatures, PhysicalDeviceProperties, PipelineBindPoint,
+        QueueFamilyProperties, QueueFlags, Rect2D, RenderPassCreateInfo, SampleCountFlags,
+        ShaderModuleCreateInfo, SharingMode, SubmitInfo, SubpassDescription, Viewport,
+    },
+};
 
-use crate::{GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, SubPass, Spirv, Shader, ShaderKind};
+use crate::{
+    GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, Shader, ShaderKind, Spirv,
+    SubPass,
+};
 
 /// Represents a physical device  
 ///
@@ -308,7 +315,7 @@ impl Device {
         Ok(RenderPass { inner })
     }
 
-    pub fn create_shader_module(&self,spirv: Spirv,kind: ShaderKind) -> Result<Shader,GMResult> {
+    pub fn create_shader_module(&self, spirv: Spirv, kind: ShaderKind) -> Result<Shader, GMResult> {
         let shader_create_info = ShaderModuleCreateInfo::builder().code(&spirv.data).build();
         let shader = match unsafe { self.inner.create_shader_module(&shader_create_info, None) } {
             Ok(s) => s,
