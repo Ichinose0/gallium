@@ -1,14 +1,15 @@
-use std::ffi::{CStr, CString, c_void};
+use std::ffi::{c_void, CStr, CString};
 
 use ash::vk::{
     AttachmentReference, ColorComponentFlags, ComponentMapping, ComponentSwizzle, CullModeFlags,
-    Format, FrontFace, GraphicsPipelineCreateInfo, ImageLayout, ImageViewCreateInfo, ImageViewType,
-    PipelineBindPoint, PipelineCache, PipelineColorBlendAttachmentState,
+    Format, FramebufferCreateInfo, FrontFace, GraphicsPipelineCreateInfo, ImageAspectFlags,
+    ImageLayout, ImageSubresourceRange, ImageViewCreateInfo, ImageViewType, MemoryMapFlags,
+    MemoryRequirements, PipelineBindPoint, PipelineCache, PipelineColorBlendAttachmentState,
     PipelineColorBlendStateCreateInfo, PipelineInputAssemblyStateCreateInfo,
     PipelineLayoutCreateInfo, PipelineMultisampleStateCreateInfo,
     PipelineRasterizationStateCreateInfo, PipelineShaderStageCreateInfo,
     PipelineVertexInputStateCreateInfo, PipelineViewportStateCreateInfo, PolygonMode,
-    PrimitiveTopology, Rect2D, SampleCountFlags, ShaderStageFlags, SubpassDescription, ImageSubresourceRange, ImageAspectFlags, FramebufferCreateInfo, MemoryRequirements, MemoryMapFlags,
+    PrimitiveTopology, Rect2D, SampleCountFlags, ShaderStageFlags, SubpassDescription,
 };
 
 use crate::{Device, GMResult};
@@ -41,7 +42,15 @@ impl Image {
                     .b(ComponentSwizzle::IDENTITY)
                     .build(),
             )
-            .subresource_range(ImageSubresourceRange::builder().aspect_mask(ImageAspectFlags::COLOR).base_mip_level(0).level_count(1).base_array_layer(0).layer_count(1).build())
+            .subresource_range(
+                ImageSubresourceRange::builder()
+                    .aspect_mask(ImageAspectFlags::COLOR)
+                    .base_mip_level(0)
+                    .level_count(1)
+                    .base_array_layer(0)
+                    .layer_count(1)
+                    .build(),
+            )
             .build();
         let inner = match unsafe { device.inner.create_image_view(&create_info, None) } {
             Ok(i) => i,
@@ -50,32 +59,51 @@ impl Image {
         Ok(ImageView { inner })
     }
 
-    pub fn map_memory(&self,device: &Device) -> *mut c_void {
+    pub fn map_memory(&self, device: &Device) -> *mut c_void {
         unsafe {
-            device.inner.map_memory(self.memory, 0, self.img_mem_required.size, MemoryMapFlags::empty()).unwrap()
+            device
+                .inner
+                .map_memory(
+                    self.memory,
+                    0,
+                    self.img_mem_required.size,
+                    MemoryMapFlags::empty(),
+                )
+                .unwrap()
         }
     }
 }
 
 pub struct ImageView {
-    inner: ash::vk::ImageView,
+    pub(crate) inner: ash::vk::ImageView,
 }
 
 impl ImageView {
-    pub fn create_frame_buffer(&self,device: &Device,render_pass: &RenderPass,width: u32,height: u32) -> Result<FrameBuffer,GMResult> {
-        let create_info = FramebufferCreateInfo::builder().width(width).height(height).layers(1).render_pass(render_pass.inner).attachments(&[self.inner]).build();
+    pub fn create_frame_buffer(
+        &self,
+        device: &Device,
+        render_pass: &RenderPass,
+        width: u32,
+        height: u32,
+    ) -> Result<FrameBuffer, GMResult> {
+        let create_info = FramebufferCreateInfo::builder()
+            .width(width)
+            .height(height)
+            .layers(1)
+            .render_pass(render_pass.inner)
+            .attachments(&[self.inner])
+            .build();
         let inner = match unsafe { device.inner.create_framebuffer(&create_info, None) } {
             Ok(f) => f,
             Err(_) => return Err(GMResult::UnknownError),
         };
-        Ok(FrameBuffer {
-            inner
-        })
+        Ok(FrameBuffer { inner })
     }
 }
 
+
 pub struct FrameBuffer {
-    pub(crate) inner: ash::vk::Framebuffer
+    pub(crate) inner: ash::vk::Framebuffer,
 }
 
 pub struct SubPass(pub(crate) SubpassDescription);

@@ -6,13 +6,13 @@ use std::{
     ptr::null_mut,
 };
 
-use ash::vk::MemoryMapFlags;
+use ash::vk::{CommandPoolCreateFlags, FenceCreateInfo, MemoryMapFlags};
 use ash::{
     util::read_spv,
     vk::{
         AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp,
         CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel,
-        CommandPool, CommandPoolCreateInfo, Extent2D, Extent3D, Fence, Format, ImageCreateInfo,
+        CommandPool, CommandPoolCreateInfo, Extent2D, Extent3D, Format, ImageCreateInfo,
         ImageLayout, ImageTiling, ImageType, ImageUsageFlags, MemoryAllocateInfo, Offset2D,
         PhysicalDevice, PhysicalDeviceFeatures, PhysicalDeviceProperties, PipelineBindPoint,
         QueueFamilyProperties, QueueFlags, Rect2D, RenderPassCreateInfo, SampleCountFlags,
@@ -21,8 +21,8 @@ use ash::{
 };
 
 use crate::{
-    GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, Shader, ShaderKind, Spirv,
-    SubPass, Surface, Swapchain
+    Fence, GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, Shader, ShaderKind,
+    Spirv, SubPass, Surface, Swapchain,
 };
 
 /// Represents a physical device  
@@ -129,6 +129,7 @@ impl Device {
     pub fn create_gallium(&self, queue: &Queue) -> Result<Gallium, GMResult> {
         let create_info = CommandPoolCreateInfo::builder()
             .queue_family_index(queue.info.index)
+            .flags(CommandPoolCreateFlags::RESET_COMMAND_BUFFER)
             .build();
         let command_pool = match unsafe { self.inner.create_command_pool(&create_info, None) } {
             Ok(c) => c,
@@ -169,7 +170,7 @@ impl Device {
             .build();
         unsafe {
             self.inner
-                .queue_submit(queue.inner, &[submit_info], Fence::null())
+                .queue_submit(queue.inner, &[submit_info], ash::vk::Fence::null())
                 .unwrap()
         };
     }
@@ -330,33 +331,83 @@ impl Device {
         })
     }
 
-    #[cfg(feature = "surface")]
-    pub fn create_swapchain(&self,instance: &Instance,device: &Device,gpu: &GPU,surface: &Surface) -> Result<Swapchain,GMResult> {
-        use ash::vk::{SwapchainCreateInfoKHR, SurfaceCapabilitiesKHR};
+    pub fn create_fence(&self) -> Result<Fence, GMResult> {
+        let create_info = FenceCreateInfo::builder().build();
+        match unsafe { self.inner.create_fence(&create_info, None) } {
+            Ok(inner) => Ok(Fence { inner }),
+            Err(_) => panic!("Err"),
+        }
+    }
 
-        let surface_capabilities = match unsafe { surface.surface.get_physical_device_surface_capabilities(gpu.device, surface.surface_khr) } {
+    #[cfg(feature = "surface")]
+    pub fn create_swapchain(
+        &self,
+        instance: &Instance,
+        device: &Device,
+        gpu: &GPU,
+        surface: &Surface,
+    ) -> Result<Swapchain, GMResult> {
+        use ash::vk::{SurfaceCapabilitiesKHR, SwapchainCreateInfoKHR};
+
+        let surface_capabilities = match unsafe {
+            surface
+                .surface
+                .get_physical_device_surface_capabilities(gpu.device, surface.surface_khr)
+        } {
             Ok(c) => c,
             Err(_) => panic!("Err"),
         };
-        let surface_formats = match unsafe { surface.surface.get_physical_device_surface_formats(gpu.device, surface.surface_khr) } {
+        let surface_formats = match unsafe {
+            surface
+                .surface
+                .get_physical_device_surface_formats(gpu.device, surface.surface_khr)
+        } {
             Ok(f) => f,
-            Err(_) => panic!("Err")
+            Err(_) => panic!("Err"),
         };
-        let surface_present_modes = match unsafe { surface.surface.get_physical_device_surface_present_modes(gpu.device, surface.surface_khr) } {
+        let surface_present_modes = match unsafe {
+            surface
+                .surface
+                .get_physical_device_surface_present_modes(gpu.device, surface.surface_khr)
+        } {
             Ok(m) => m,
-            Err(_) => panic!("Err")
+            Err(_) => panic!("Err"),
         };
         let format = surface_formats[0];
         let mode = surface_present_modes[0];
-        let create_info = SwapchainCreateInfoKHR::builder().surface(surface.surface_khr).min_image_count(surface_capabilities.min_image_count+1).image_format(format.format).image_color_space(format.color_space).image_extent(surface_capabilities.current_extent).image_array_layers(1).image_usage(ImageUsageFlags::COLOR_ATTACHMENT).image_sharing_mode(SharingMode::EXCLUSIVE).pre_transform(surface_capabilities.current_transform).present_mode(mode).clipped(true).build();
-        let inner = ash::extensions::khr::Swapchain::new(&instance.instance,&device.inner);
+        let create_info = SwapchainCreateInfoKHR::builder()
+            .surface(surface.surface_khr)
+            .min_image_count(surface_capabilities.min_image_count + 1)
+            .image_format(format.format)
+            .image_color_space(format.color_space)
+            .image_extent(surface_capabilities.current_extent)
+            .image_array_layers(1)
+            .image_usage(ImageUsageFlags::COLOR_ATTACHMENT)
+            .image_sharing_mode(SharingMode::EXCLUSIVE)
+            .pre_transform(surface_capabilities.current_transform)
+            .present_mode(mode)
+            .clipped(true)
+            .build();
+        let inner = ash::extensions::khr::Swapchain::new(&instance.instance, &device.inner);
         let khr = match unsafe { inner.create_swapchain(&create_info, None) } {
             Ok(k) => k,
-            Err(_) => panic!("Err")
+            Err(_) => panic!("Err"),
         };
-        Ok(Swapchain {
-            inner,
-            khr
-        })
+        Ok(Swapchain { inner, khr, format })
+    }
+
+    #[cfg(feature = "surface")]
+    pub fn acquire_next_image(&self, swapchain: &Swapchain, fence: &Fence) -> usize {
+        match unsafe {
+            swapchain.inner.acquire_next_image(
+                swapchain.khr,
+                1000000000,
+                ash::vk::Semaphore::null(),
+                fence.inner,
+            )
+        } {
+            Ok(i) => return i.0 as usize,
+            Err(_) => panic!("Err"),
+        }
     }
 }

@@ -1,3 +1,7 @@
+use ash::vk::PresentInfoKHR;
+
+use crate::Swapchain;
+
 #[derive(Clone, Copy, Debug)]
 pub struct GPUQueueInfo {
     pub(crate) index: u32,
@@ -19,5 +23,14 @@ pub struct Queue {
 }
 
 impl Queue {
-    pub fn dispatch(&self) {}
+    pub fn present(&self, swapchain: &Swapchain, index: usize) {
+        let present_info = PresentInfoKHR::builder()
+            .swapchains(&[swapchain.khr])
+            .image_indices(&[index as u32])
+            .build();
+        match unsafe { swapchain.inner.queue_present(self.inner, &present_info) } {
+            Ok(e) => {}
+            Err(_) => panic!("Err"),
+        }
+    }
 }

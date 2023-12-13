@@ -1,31 +1,33 @@
 mod device;
+mod fence;
 mod gallium;
 mod image;
 mod instance;
-mod pipeline;
 mod mem;
+mod pipeline;
 mod queue;
 mod shader;
 
-#[cfg(feature="surface")]
+#[cfg(feature = "surface")]
 mod surface;
-#[cfg(feature="surface")]
+#[cfg(feature = "surface")]
 mod swapchain;
 #[doc(hidden)]
 mod vk;
 
-pub use mem::*;
 pub use device::*;
+pub use fence::*;
 pub use gallium::*;
 pub use image::*;
 pub use instance::*;
+pub use mem::*;
 pub use pipeline::*;
 pub use queue::*;
 pub use shader::*;
 
-#[cfg(feature="surface")]
+#[cfg(feature = "surface")]
 pub use surface::*;
-#[cfg(feature="surface")]
+#[cfg(feature = "surface")]
 pub use swapchain::*;
 
 /// Result value returned when gallium instruction is executed
@@ -45,5 +47,5 @@ pub enum GMResult {
     OutOfMemory,
     UnknownError,
 
-    VkExtensionNotPresent
+    VkExtensionNotPresent,
 }
