@@ -22,7 +22,7 @@ use ash::{
 
 use crate::{
     GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, Shader, ShaderKind, Spirv,
-    SubPass,
+    SubPass, Surface, Swapchain
 };
 
 /// Represents a physical device  
@@ -327,6 +327,36 @@ impl Device {
         Ok(Shader {
             inner: shader,
             kind,
+        })
+    }
+
+    #[cfg(feature = "surface")]
+    pub fn create_swapchain(&self,instance: &Instance,device: &Device,gpu: &GPU,surface: &Surface) -> Result<Swapchain,GMResult> {
+        use ash::vk::{SwapchainCreateInfoKHR, SurfaceCapabilitiesKHR};
+
+        let surface_capabilities = match unsafe { surface.surface.get_physical_device_surface_capabilities(gpu.device, surface.surface_khr) } {
+            Ok(c) => c,
+            Err(_) => panic!("Err"),
+        };
+        let surface_formats = match unsafe { surface.surface.get_physical_device_surface_formats(gpu.device, surface.surface_khr) } {
+            Ok(f) => f,
+            Err(_) => panic!("Err")
+        };
+        let surface_present_modes = match unsafe { surface.surface.get_physical_device_surface_present_modes(gpu.device, surface.surface_khr) } {
+            Ok(m) => m,
+            Err(_) => panic!("Err")
+        };
+        let format = surface_formats[0];
+        let mode = surface_present_modes[0];
+        let create_info = SwapchainCreateInfoKHR::builder().surface(surface.surface_khr).min_image_count(surface_capabilities.min_image_count+1).image_format(format.format).image_color_space(format.color_space).image_extent(surface_capabilities.current_extent).image_array_layers(1).image_usage(ImageUsageFlags::COLOR_ATTACHMENT).image_sharing_mode(SharingMode::EXCLUSIVE).pre_transform(surface_capabilities.current_transform).present_mode(mode).clipped(true).build();
+        let inner = ash::extensions::khr::Swapchain::new(&instance.instance,&device.inner);
+        let khr = match unsafe { inner.create_swapchain(&create_info, None) } {
+            Ok(k) => k,
+            Err(_) => panic!("Err")
+        };
+        Ok(Swapchain {
+            inner,
+            khr
         })
     }
 }

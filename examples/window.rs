@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufWriter};
 
-use gallium::{GPUQueueInfo, Instance, InstanceDesc, ShaderKind, Spirv, SubPass, win32::{Win32Surface, HWND, HINSTANCE}};
+use gallium::{GPUQueueInfo, Instance, InstanceDesc, ShaderKind, Spirv, SubPass,  HWND, HINSTANCE,Surface};
 use raw_window_handle::HasRawWindowHandle;
 use winit::{window::WindowBuilder, event_loop::EventLoop, event::{WindowEvent, Event}};
 
@@ -70,10 +70,11 @@ fn main() {
     let handle = window.raw_window_handle();
     let surface = match handle {
         raw_window_handle::RawWindowHandle::Win32(handle) => {
-            Win32Surface::create(&instance,handle.hwnd as HWND,handle.hinstance as HINSTANCE)
+            Surface::create_for_win32(&instance,handle.hwnd as HWND,handle.hinstance as HINSTANCE)
         },
         _ => panic!("Not supported"),
     };
+    let swapchain = device.create_swapchain(&instance, &device, &gpu, &surface).unwrap();
 
     event_loop.run(move |event, _, control_flow| {
         control_flow.set_wait();

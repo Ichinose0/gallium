@@ -83,6 +83,7 @@ impl Instance {
         Ok(Self { entry, instance })
     }
 
+    #[cfg(feature = "surface")]
     pub fn new_with_surface(window: &impl HasRawDisplayHandle,desc: InstanceDesc) -> Result<Self, GMResult> {
         let entry = ash::Entry::linked();
         let app_info = ApplicationInfo::builder()
@@ -111,6 +112,9 @@ impl Instance {
                     }
                     crate::vk::VK_ERROR_INCOMPATIBLE_DRIVER => {
                         return Err(GMResult::IncompatibleDriver)
+                    }
+                    crate::vk::VK_ERROR_EXTENSION_NOT_PRESENT => {
+                        return Err(GMResult::VkExtensionNotPresent)
                     }
                     _ => return Err(GMResult::UnknownError),
                 }
@@ -183,8 +187,13 @@ impl Instance {
             .queue_priorities(&[1.0])
             .build();
         queue_create_info.queue_count = info.count;
+        let mut enabled_extension_names = vec![];
+        let swapchain = CString::new("VK_KHR_swapchain").unwrap();
+            let swapchain_cstr = swapchain.as_c_str();
+        enabled_extension_names.push(swapchain_cstr.as_ptr());
         let create_info = DeviceCreateInfo::builder()
             .queue_create_infos(&[queue_create_info])
+            .enabled_extension_names(&enabled_extension_names)
             .build();
         let device = match unsafe { self.instance.create_device(gpu.device, &create_info, None) } {
             Ok(d) => d,

@@ -9,6 +9,8 @@ mod shader;
 
 #[cfg(feature="surface")]
 mod surface;
+#[cfg(feature="surface")]
+mod swapchain;
 #[doc(hidden)]
 mod vk;
 
@@ -23,6 +25,8 @@ pub use shader::*;
 
 #[cfg(feature="surface")]
 pub use surface::*;
+#[cfg(feature="surface")]
+pub use swapchain::*;
 
 /// Result value returned when gallium instruction is executed
 ///
@@ -40,4 +44,6 @@ pub enum GMResult {
     InvalidValue,
     OutOfMemory,
     UnknownError,
+
+    VkExtensionNotPresent
 }
