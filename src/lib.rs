@@ -1,4 +1,5 @@
 mod device;
+mod fence;
 mod gallium;
 mod image;
 mod instance;
@@ -15,6 +16,7 @@ mod swapchain;
 mod vk;
 
 pub use device::*;
+pub use fence::*;
 pub use gallium::*;
 pub use image::*;
 pub use instance::*;

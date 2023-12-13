@@ -88,14 +88,7 @@ fn main() {
         .create_pipeline(&image, &device, &[fragment_shader, vertex_shader])
         .unwrap();
 
-    gallium.reset(&device);
-    gallium.begin_draw(&device);
-    gallium.begin_render_pass(&device, &frame_buffer, &render_pass, 640, 480);
-    gallium.end_render_pass(&device);
-    gallium.bind_pipeline(&device, &pipeline[0]);
-    gallium.draw(&device, 3, 1, 0, 0);
-    gallium.end_draw(&device);
-    device.dispatch_to_queue(&gallium, &queue);
+    let fence = device.create_fence().unwrap();
 
     event_loop.run(move |event, _, control_flow| {
         control_flow.set_wait();
@@ -106,7 +99,22 @@ fn main() {
                 window_id,
             } if window_id == window.id() => control_flow.set_exit(),
             Event::MainEventsCleared => {
-                window.request_redraw();
+                let acquire_image_index = device.acquire_next_image(&swapchain, &fence);
+                gallium.reset(&device);
+                gallium.begin_draw(&device);
+                gallium.begin_render_pass(
+                    &device,
+                    &frame_buffers[acquire_image_index],
+                    &render_pass,
+                    640,
+                    480,
+                );
+                gallium.end_render_pass(&device);
+                gallium.bind_pipeline(&device, &pipeline[0]);
+                gallium.draw(&device, 3, 1, 0, 0);
+                gallium.end_draw(&device);
+                queue.present(&swapchain, acquire_image_index);
+                device.dispatch_to_queue(&gallium, &queue);
             }
             _ => (),
         }

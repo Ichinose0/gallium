@@ -6,13 +6,13 @@ use std::{
     ptr::null_mut,
 };
 
-use ash::vk::{CommandPoolCreateFlags, MemoryMapFlags};
+use ash::vk::{CommandPoolCreateFlags, FenceCreateInfo, MemoryMapFlags};
 use ash::{
     util::read_spv,
     vk::{
         AttachmentDescription, AttachmentLoadOp, AttachmentReference, AttachmentStoreOp,
         CommandBuffer, CommandBufferAllocateInfo, CommandBufferBeginInfo, CommandBufferLevel,
-        CommandPool, CommandPoolCreateInfo, Extent2D, Extent3D, Fence, Format, ImageCreateInfo,
+        CommandPool, CommandPoolCreateInfo, Extent2D, Extent3D, Format, ImageCreateInfo,
         ImageLayout, ImageTiling, ImageType, ImageUsageFlags, MemoryAllocateInfo, Offset2D,
         PhysicalDevice, PhysicalDeviceFeatures, PhysicalDeviceProperties, PipelineBindPoint,
         QueueFamilyProperties, QueueFlags, Rect2D, RenderPassCreateInfo, SampleCountFlags,
@@ -21,8 +21,8 @@ use ash::{
 };
 
 use crate::{
-    GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, Shader, ShaderKind, Spirv,
-    SubPass, Surface, Swapchain,
+    Fence, GMResult, GPUQueueInfo, Gallium, Image, Instance, Queue, RenderPass, Shader, ShaderKind,
+    Spirv, SubPass, Surface, Swapchain,
 };
 
 /// Represents a physical device  
@@ -170,7 +170,7 @@ impl Device {
             .build();
         unsafe {
             self.inner
-                .queue_submit(queue.inner, &[submit_info], Fence::null())
+                .queue_submit(queue.inner, &[submit_info], ash::vk::Fence::null())
                 .unwrap()
         };
     }
@@ -331,6 +331,14 @@ impl Device {
         })
     }
 
+    pub fn create_fence(&self) -> Result<Fence, GMResult> {
+        let create_info = FenceCreateInfo::builder().build();
+        match unsafe { self.inner.create_fence(&create_info, None) } {
+            Ok(inner) => Ok(Fence { inner }),
+            Err(_) => panic!("Err"),
+        }
+    }
+
     #[cfg(feature = "surface")]
     pub fn create_swapchain(
         &self,
@@ -386,5 +394,20 @@ impl Device {
             Err(_) => panic!("Err"),
         };
         Ok(Swapchain { inner, khr, format })
+    }
+
+    #[cfg(feature = "surface")]
+    pub fn acquire_next_image(&self, swapchain: &Swapchain, fence: &Fence) -> usize {
+        match unsafe {
+            swapchain.inner.acquire_next_image(
+                swapchain.khr,
+                1000000000,
+                ash::vk::Semaphore::null(),
+                fence.inner,
+            )
+        } {
+            Ok(i) => return i.0 as usize,
+            Err(_) => panic!("Err"),
+        }
     }
 }
