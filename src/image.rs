@@ -23,6 +23,11 @@ pub struct Image {
 }
 
 impl Image {
+    /// Create an image.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - Valid Devices
     pub fn create_image_view(&self, device: &Device) -> Result<ImageView, GMResult> {
         let create_info = ImageViewCreateInfo::builder()
             .image(self.inner)
