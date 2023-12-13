@@ -3,9 +3,7 @@ use ash::vk::DeviceMemory;
 use crate::{Device, Image};
 
 pub struct MappedMemory {
-    memory: DeviceMemory
+    memory: DeviceMemory,
 }
 
-impl MappedMemory {
-    
-}
+impl MappedMemory {}

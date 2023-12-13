@@ -2,7 +2,7 @@ use ash::{util::read_spv, vk::ShaderModule};
 use std::io::{Cursor, Read};
 
 ///Indicates shader type
-/// 
+///
 /// # Value Meaning
 /// * `Vertex` - Vertex shader.
 /// * `Fragment` - Fragment shader.

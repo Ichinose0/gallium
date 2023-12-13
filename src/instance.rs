@@ -58,7 +58,6 @@ impl Instance {
             .api_version(ash::vk::API_VERSION_1_0)
             .application_name(CString::new(desc.app_name).unwrap().as_c_str())
             .build();
-        
 
         let create_info = InstanceCreateInfo::builder()
             .application_info(&app_info)
@@ -84,14 +83,17 @@ impl Instance {
     }
 
     #[cfg(feature = "surface")]
-    pub fn new_with_surface(window: &impl HasRawDisplayHandle,desc: InstanceDesc) -> Result<Self, GMResult> {
+    pub fn new_with_surface(
+        window: &impl HasRawDisplayHandle,
+        desc: InstanceDesc,
+    ) -> Result<Self, GMResult> {
         let entry = ash::Entry::linked();
         let app_info = ApplicationInfo::builder()
             .api_version(ash::vk::API_VERSION_1_0)
             .application_name(CString::new(desc.app_name).unwrap().as_c_str())
             .build();
-        
-            let mut extension_names =
+
+        let mut extension_names =
             ash_window::enumerate_required_extensions(window.raw_display_handle())
                 .unwrap()
                 .to_vec();
@@ -121,7 +123,6 @@ impl Instance {
             }
         };
         Ok(Self { entry, instance })
-    
     }
 
     /// Get a list of available physical devices (GPUs).  
@@ -189,7 +190,7 @@ impl Instance {
         queue_create_info.queue_count = info.count;
         let mut enabled_extension_names = vec![];
         let swapchain = CString::new("VK_KHR_swapchain").unwrap();
-            let swapchain_cstr = swapchain.as_c_str();
+        let swapchain_cstr = swapchain.as_c_str();
         enabled_extension_names.push(swapchain_cstr.as_ptr());
         let create_info = DeviceCreateInfo::builder()
             .queue_create_infos(&[queue_create_info])
