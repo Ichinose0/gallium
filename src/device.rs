@@ -356,7 +356,8 @@ impl Device {
         };
         Ok(Swapchain {
             inner,
-            khr
+            khr,
+            format
         })
     }
 }

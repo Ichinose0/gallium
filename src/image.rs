@@ -58,7 +58,7 @@ impl Image {
 }
 
 pub struct ImageView {
-    inner: ash::vk::ImageView,
+    pub(crate) inner: ash::vk::ImageView,
 }
 
 impl ImageView {
